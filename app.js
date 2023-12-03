@@ -211,7 +211,7 @@ const goal = Bodies.rectangle(
   width - unitLengthX / 2,
   height - unitLengthY / 2,
   unitLengthX * 0.5,
-  unitLengthY * 0.5,
+  unitLengthY * 0.25,
   { isStatic: true, label: 'goal', render: { fillStyle: 'green' } }
 );
 World.add(world, goal);
