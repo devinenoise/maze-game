@@ -17,7 +17,7 @@ let storedTotal = Number(localStorage.getItem('total'));
 let storedCellsX = Number(localStorage.getItem('cellsx'));
 let storedCellsY = Number(localStorage.getItem('cellsx'));
 
-let cellsHorizontal = storedCellsX > 6 ? storedCellsX : 8;
+let cellsHorizontal = storedCellsX > 6 ? storedCellsX : 10;
 let cellsVertical = storedCellsY > 4 ? storedCellsY : 4;
 
 // ------------ GLOBAL VARIABLES END ------------- //

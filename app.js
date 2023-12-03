@@ -34,22 +34,22 @@ engine.world.gravity.y = 0;
 const { world } = engine;
 
 // maze size
-// const cellsHorizontal = 4;
-// const cellsVertical = 2;
+// let cellsHorizontal = 6;
+// let cellsVertical = 4;
 const width = window.innerWidth;
 const height = window.innerHeight * 0.9;
 const borderWidth = 1;
 
 // cell size
 const unitLengthX = width / cellsHorizontal;
-const unitLengthY = width / cellsVertical;
+const unitLengthY = height / cellsVertical;
 const wallWidth = 2;
 
 // ball properties
-const ballVelocity = 4;
+const ballVelocity = 3.5;
 
 const render = Render.create({
-  element: document.body,
+  element: document.querySelector('.app'),
   engine,
   options: {
     width,
@@ -211,7 +211,7 @@ const goal = Bodies.rectangle(
   width - unitLengthX / 2,
   height - unitLengthY / 2,
   unitLengthX * 0.5,
-  unitLengthY * 0.25,
+  unitLengthY * 0.5,
   { isStatic: true, label: 'goal', render: { fillStyle: 'green' } }
 );
 World.add(world, goal);
@@ -251,7 +251,6 @@ function handleTouchStart(event) {
 }
 
 function handleTouchMove(event) {
-  event.preventDefault(); // Prevent default touch behavior
   const touch = event.touches[0]; // Consider the first touch in a multi-touch scenario
   const touchEndX = touch.clientX;
   const touchEndY = touch.clientY;
