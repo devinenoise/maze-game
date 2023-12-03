@@ -34,15 +34,18 @@ engine.world.gravity.y = 0;
 const { world } = engine;
 
 // maze size
-const cellsHorizontal = 4;
-const cellsVertical = 3;
-
+// const cellsHorizontal = 4;
+// const cellsVertical = 2;
 const width = window.innerWidth;
-const height = window.innerHeight;
+const height = window.innerHeight * 0.9;
+const borderWidth = 1;
 
+// cell size
 const unitLengthX = width / cellsHorizontal;
 const unitLengthY = width / cellsVertical;
-const wallSize = 1;
+const wallWidth = 2;
+
+// ball properties
 const ballVelocity = 4;
 
 const render = Render.create({
@@ -63,19 +66,22 @@ const border = [
   // https://brm.io/matter-js/docs/classes/Bodies.html#method_rectangle
   // x, y, width, height, options
   // top
-  Bodies.rectangle(width / 2, 0, width, 1, { isStatic: true, label: 'border' }),
+  Bodies.rectangle(width / 2, 0, width, borderWidth, {
+    isStatic: true,
+    label: 'border'
+  }),
   // bottom
-  Bodies.rectangle(width / 2, height, width, 1, {
+  Bodies.rectangle(width / 2, height, width, borderWidth, {
     isStatic: true,
     label: 'border'
   }),
   // left
-  Bodies.rectangle(0, height / 2, 1, height, {
+  Bodies.rectangle(0, height / 2, borderWidth, height, {
     isStatic: true,
     label: 'border'
   }),
   // right
-  Bodies.rectangle(width, height / 2, 1, height, {
+  Bodies.rectangle(width, height / 2, borderWidth, height, {
     isStatic: true,
     label: 'border'
   })
@@ -123,7 +129,7 @@ const startingRow = Math.floor(Math.random() * cellsVertical);
 const startingColumn = Math.floor(Math.random() * cellsHorizontal);
 
 // algorithm
-const stepThroughCell = (row, column) => {
+const mazePath = (row, column) => {
   // if I have visited the cell at [row, column], then return
   if (grid[row][column]) return;
   // Mark this cell as being visited
@@ -162,12 +168,12 @@ const stepThroughCell = (row, column) => {
       horizontals[row][column] = true;
     }
 
-    stepThroughCell(nextRow, nextColumn);
+    mazePath(nextRow, nextColumn);
   }
   // Visit that next cell (recursion)
 };
 
-stepThroughCell(startingRow, startingColumn);
+mazePath(startingRow, startingColumn);
 
 // 2d array
 horizontals.forEach((row, rowIndex) => {
@@ -178,8 +184,8 @@ horizontals.forEach((row, rowIndex) => {
       columnIndex * unitLengthX + unitLengthX / 2,
       rowIndex * unitLengthY + unitLengthY,
       unitLengthX,
-      wallSize,
-      { isStatic: true, label: 'wall' }
+      wallWidth,
+      { isStatic: true, label: 'wall', render: { fillStyle: 'purple' } }
     );
     World.add(world, wall);
   });
@@ -191,9 +197,9 @@ verticals.forEach((row, rowIndex) => {
     const wall = Bodies.rectangle(
       columnIndex * unitLengthX + unitLengthX,
       rowIndex * unitLengthY + unitLengthY / 2,
-      wallSize,
+      wallWidth,
       unitLengthY,
-      { isStatic: true, label: 'wall' }
+      { isStatic: true, label: 'wall', render: { fillStyle: 'purple' } }
     );
     World.add(world, wall);
   });
@@ -204,8 +210,8 @@ const goal = Bodies.rectangle(
   // x, y, width, height, options
   width - unitLengthX / 2,
   height - unitLengthY / 2,
-  unitLengthX * 0.7,
-  unitLengthY * 0.7,
+  unitLengthX * 0.5,
+  unitLengthY * 0.5,
   { isStatic: true, label: 'goal', render: { fillStyle: 'green' } }
 );
 World.add(world, goal);
@@ -213,7 +219,8 @@ World.add(world, goal);
 // Control Ball
 const ballRadius = Math.min(unitLengthX, unitLengthY) / 4;
 const ball = Bodies.circle(unitLengthX / 2, unitLengthY / 2, ballRadius, {
-  label: 'ball'
+  label: 'ball',
+  render: { fillStyle: 'blue' }
 });
 World.add(world, ball);
 document.addEventListener('keyup', event => {
@@ -241,12 +248,17 @@ Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach(collision => {
     const labels = ['ball', 'goal'];
 
+    // console.log(collision.bodyA.label)
     if (
       labels.includes(collision.bodyA.label) &&
       labels.includes(collision.bodyB.label)
     ) {
-      engine.world.gravity.y = 1;
+      timerStop();
+      increaseCells();
+      winningMessage();
 
+      world.gravity.y = 1;
+      Body.setStatic(ball, true);
       world.bodies.forEach(body => {
         if (body.label === 'wall') {
           Body.setStatic(body, false);
