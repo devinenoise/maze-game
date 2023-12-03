@@ -1,0 +1,257 @@
+/* Big Challenges / Solutions
+
+Matter JS docs -- brm.io/matter-js
+
+1. How do we generate the maze?
+  a. Algorithms generate the maze.  Learn about tree data structure and recursion to implement a simple Algorithm.
+
+2. How are we going to going to draw it on the screen?
+  a. Use Matter JS to draw the maze on a canvas element
+
+3. How do we make the keyboard keys control the ball?
+  a. Matter JS has the ability to map key presses
+
+4. How do we detect the ball touching the green square?
+  a. Matter JS has the ability to detect collisions between different shapes and report them as events.
+
+*/
+
+/* Building a Maze
+
+1.  Create a grid of cells
+2.  Pick a random starting cell
+3.  For that cell build a randomly ordered list of neighbors
+4.  If a neighbor has visited before, remove it from the list
+5.  For each remaining neighbor, 'move' to it and remove the wall between those two cells
+6.  Repeat for this new neighbor
+
+*/
+
+const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
+
+const engine = Engine.create();
+engine.world.gravity.y = 0;
+const { world } = engine;
+
+// maze size
+const cellsHorizontal = 4;
+const cellsVertical = 3;
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = width / cellsVertical;
+const wallSize = 1;
+const ballVelocity = 4;
+
+const render = Render.create({
+  element: document.body,
+  engine,
+  options: {
+    width,
+    height,
+    wireframes: false
+  }
+});
+
+Render.run(render);
+Runner.run(Runner.create(), engine);
+
+// Canvas Border
+const border = [
+  // https://brm.io/matter-js/docs/classes/Bodies.html#method_rectangle
+  // x, y, width, height, options
+  // top
+  Bodies.rectangle(width / 2, 0, width, 1, { isStatic: true, label: 'border' }),
+  // bottom
+  Bodies.rectangle(width / 2, height, width, 1, {
+    isStatic: true,
+    label: 'border'
+  }),
+  // left
+  Bodies.rectangle(0, height / 2, 1, height, {
+    isStatic: true,
+    label: 'border'
+  }),
+  // right
+  Bodies.rectangle(width, height / 2, 1, height, {
+    isStatic: true,
+    label: 'border'
+  })
+];
+World.add(world, border);
+
+// Maze generation
+
+const shuffle = arr => {
+  // Initializing a counter to the length of the array
+  let counter = arr.length;
+  // Loop until the counter becomes 0
+  while (counter > 0) {
+    // Generating a random index within the range of the counter
+    const index = Math.floor(Math.random() * counter);
+    // Decreasing the counter by 1
+    counter--;
+    // Swapping elements between the current counter position and the randomly chosen index
+    const temp = arr[counter]; // Storing the element at the current counter position in a temporary variable
+    arr[counter] = arr[index]; // Assigning the element at the randomly chosen index to the current counter position
+    arr[index] = temp; // Assigning the element from the temporary variable to the randomly chosen index
+  }
+  return arr;
+};
+
+const grid = Array(cellsVertical)
+  // init the array
+  .fill(null)
+  // map gives a diff array in memory
+  .map(() => Array(cellsHorizontal).fill(false));
+
+// init vertical walls
+const verticals = Array(cellsVertical)
+  .fill(null)
+  // 2 columns
+  .map(() => Array(cellsHorizontal - 1).fill(false));
+
+// init horizontal walls
+const horizontals = Array(cellsVertical - 1)
+  .fill(null)
+  .map(() => Array(cellsHorizontal).fill(false));
+
+// randomize the [row][column] pick
+const startingRow = Math.floor(Math.random() * cellsVertical);
+const startingColumn = Math.floor(Math.random() * cellsHorizontal);
+
+// algorithm
+const stepThroughCell = (row, column) => {
+  // if I have visited the cell at [row, column], then return
+  if (grid[row][column]) return;
+  // Mark this cell as being visited
+  grid[row][column] = true;
+  // Assemble randomly-ordered list of neighbors with directions
+  const neighbors = shuffle([
+    [row - 1, column, 'up'],
+    [row, column + 1, 'right'],
+    [row + 1, column, 'down'],
+    [row, column - 1, 'left']
+  ]);
+  // For each neighbor....
+  for (let neighbor of neighbors) {
+    const [nextRow, nextColumn, direction] = neighbor;
+    // See if that neighbor is out of bounds
+    if (
+      nextRow < 0 ||
+      nextRow >= cellsVertical ||
+      nextColumn < 0 ||
+      nextColumn >= cellsHorizontal
+    ) {
+      continue;
+    }
+    // If we have visited that neighbor, continue to next neighbor
+    if (grid[nextRow][nextColumn]) {
+      continue;
+    }
+    // Remove a wall from either horizontals[] or verticals[]
+    if (direction === 'left') {
+      verticals[row][column - 1] = true;
+    } else if (direction === 'right') {
+      verticals[row][column] = true;
+    } else if (direction === 'up') {
+      horizontals[row - 1][column] = true;
+    } else if (direction === 'down') {
+      horizontals[row][column] = true;
+    }
+
+    stepThroughCell(nextRow, nextColumn);
+  }
+  // Visit that next cell (recursion)
+};
+
+stepThroughCell(startingRow, startingColumn);
+
+// 2d array
+horizontals.forEach((row, rowIndex) => {
+  row.forEach((open, columnIndex) => {
+    if (open) return;
+    // x, y, width, height, options
+    const wall = Bodies.rectangle(
+      columnIndex * unitLengthX + unitLengthX / 2,
+      rowIndex * unitLengthY + unitLengthY,
+      unitLengthX,
+      wallSize,
+      { isStatic: true, label: 'wall' }
+    );
+    World.add(world, wall);
+  });
+});
+verticals.forEach((row, rowIndex) => {
+  row.forEach((open, columnIndex) => {
+    if (open) return;
+    // x, y, width, height, options
+    const wall = Bodies.rectangle(
+      columnIndex * unitLengthX + unitLengthX,
+      rowIndex * unitLengthY + unitLengthY / 2,
+      wallSize,
+      unitLengthY,
+      { isStatic: true, label: 'wall' }
+    );
+    World.add(world, wall);
+  });
+});
+
+// Goal
+const goal = Bodies.rectangle(
+  // x, y, width, height, options
+  width - unitLengthX / 2,
+  height - unitLengthY / 2,
+  unitLengthX * 0.7,
+  unitLengthY * 0.7,
+  { isStatic: true, label: 'goal', render: { fillStyle: 'green' } }
+);
+World.add(world, goal);
+
+// Control Ball
+const ballRadius = Math.min(unitLengthX, unitLengthY) / 4;
+const ball = Bodies.circle(unitLengthX / 2, unitLengthY / 2, ballRadius, {
+  label: 'ball'
+});
+World.add(world, ball);
+document.addEventListener('keyup', event => {
+  const { x, y } = ball.velocity;
+  if (event.code === 'KeyW') {
+    // up
+    Body.setVelocity(ball, { x, y: y - ballVelocity });
+  }
+  if (event.code === 'KeyD') {
+    // right
+    Body.setVelocity(ball, { x: x + ballVelocity, y });
+  }
+  if (event.code === 'KeyS') {
+    // down
+    Body.setVelocity(ball, { x, y: y + ballVelocity });
+  }
+  if (event.code === 'KeyA') {
+    // left
+    Body.setVelocity(ball, { x: x - ballVelocity, y });
+  }
+});
+
+// Win Condition
+Events.on(engine, 'collisionStart', event => {
+  event.pairs.forEach(collision => {
+    const labels = ['ball', 'goal'];
+
+    if (
+      labels.includes(collision.bodyA.label) &&
+      labels.includes(collision.bodyB.label)
+    ) {
+      engine.world.gravity.y = 1;
+
+      world.bodies.forEach(body => {
+        if (body.label === 'wall') {
+          Body.setStatic(body, false);
+        }
+      });
+    }
+  });
+});
