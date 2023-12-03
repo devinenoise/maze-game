@@ -36,8 +36,8 @@ const { world } = engine;
 // maze size
 // let cellsHorizontal = 6;
 // let cellsVertical = 4;
-const width = window.innerWidth;
-const height = window.innerHeight * 0.9;
+const width = document.documentElement.clientWidth;
+const height = document.documentElement.clientHeight;
 const borderWidth = 1;
 
 // cell size

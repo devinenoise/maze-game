@@ -3,6 +3,7 @@ body {
   padding: 0;
   font-family: 'Roboto Mono', monospace;
   position: relative;
+  overflow: hidden;
 }
 
 /* --------- HEADER ------------- */
@@ -13,11 +14,11 @@ body {
   flex-direction: column;
   gap: 10px;
   width: 100%;
-  padding: 16px;
+  padding: 12px;
   margin: 0;
   background: linear-gradient(to left, #904e95, #e96443, #904e95);
 }
-@media (min-width: 768px) {
+@media (min-width: 425px) {
   .header {
     flex-direction: row;
   }
