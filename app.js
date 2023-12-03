@@ -243,6 +243,52 @@ document.addEventListener('keyup', event => {
   }
 });
 
+// Function to handle touch events
+function handleTouchStart(event) {
+  const touch = event.touches[0]; // Consider the first touch in a multi-touch scenario
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+}
+
+function handleTouchMove(event) {
+  event.preventDefault(); // Prevent default touch behavior
+  const touch = event.touches[0]; // Consider the first touch in a multi-touch scenario
+  const touchEndX = touch.clientX;
+  const touchEndY = touch.clientY;
+
+  const deltaX = touchEndX - touchStartX;
+  const deltaY = touchEndY - touchStartY;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX > 0) {
+      // Right
+      Body.setVelocity(ball, { x: ballVelocity, y: 0 });
+    } else {
+      // Left
+      Body.setVelocity(ball, { x: -ballVelocity, y: 0 });
+    }
+  } else {
+    if (deltaY > 0) {
+      // Down
+      Body.setVelocity(ball, { x: 0, y: ballVelocity });
+    } else {
+      // Up
+      Body.setVelocity(ball, { x: 0, y: -ballVelocity });
+    }
+  }
+}
+
+function handleTouchEnd() {
+  // Clear velocity when touch ends, if needed
+  Body.setVelocity(ball, { x: 0, y: 0 });
+}
+
+// Add touch event listeners
+let touchStartX, touchStartY;
+document.addEventListener('touchstart', handleTouchStart);
+document.addEventListener('touchmove', handleTouchMove);
+document.addEventListener('touchend', handleTouchEnd);
+
 // Win Condition
 Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach(collision => {
