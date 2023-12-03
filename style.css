@@ -9,10 +9,11 @@ body {
 .header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
   padding: 16px;
   margin: 0;
   background: linear-gradient(to left, #904e95, #e96443, #904e95);
-  flex-wrap: wrap;
 }
 
 .header h3 {
